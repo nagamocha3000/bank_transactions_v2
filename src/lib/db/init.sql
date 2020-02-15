@@ -86,7 +86,9 @@ begin
     if tg_op = 'INSERT' and new.transfer_status = 'pending' then 
         return new;
     end if; 
-    if tg_op = 'UPDATE' and old.transfer_status = 'pending' then
+    if tg_op = 'UPDATE' 
+        and old.transfer_status = 'pending' 
+        and old.from_account = new.from_account then
         return new; 
     end if; 
     raise notice 'invalid operation on transfer_log entry';
