@@ -1,11 +1,11 @@
 begin;
 
---CUSTOMER TABLE
+--USERS TABLE
 create domain contact_entry_t as
     varchar(50) not null check (value <> '' and value !~ '\s');
 
-create table customer(
-    customer_id serial primary key,
+create table users(
+    user_id serial primary key,
     email contact_entry_t unique,
     firstname contact_entry_t,
     lastname contact_entry_t,
@@ -20,13 +20,13 @@ create table customer(
 --ACCOUNT TABLE
 create table account(
     account_id serial primary key,
-    customer_id int not null,
+    user_id int not null,
     balance numeric(12,2) not null default 0,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     is_active boolean not null default 't',
 
-    foreign key (customer_id) references customer(customer_id)
+    foreign key (user_id) references users(user_id)
         on delete restrict on update restrict,
 
     constraint balance_nonnegative check(
