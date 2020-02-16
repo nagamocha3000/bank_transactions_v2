@@ -14,12 +14,12 @@ const timer = (ms = 1000) => new Promise(resolve => setTimeout(resolve, ms));
 //setup cmdline args
 program
     .description("db seed script, for one-time use")
-    .option("-u --users <users>", "number of users to insert", getInt, 3)
+    .option("-u --users <users>", "number of users to insert", getInt, 10)
     .option(
         "-a --accounts <accounts>",
         "number of accounts per user to insert",
         getInt,
-        3
+        2
     )
     .option(
         "-t --transfers <transfers>",
@@ -43,41 +43,47 @@ program
         "-y --lower <lower>",
         "lower value for random, inclusive",
         getInt,
-        1
+        5
     )
     .option(
         "-n --num <num>",
         "if non-random, value for each transfer",
         getInt,
-        20
+        10
     );
 
 //for validation of cmd line args
 const validateCmdArgs = args => {
-    const numSchema = Joi.number()
+    const _numSchema = Joi.number()
         .integer()
-        .min(1)
         .required();
-    const users = numSchema.validate(args.users);
-    const accounts = numSchema.validate(args.accounts);
-    const transfers = numSchema.validate(args.transfers);
-    const upper = numSchema.validate(args.upper);
-    const lower = numSchema.validate(args.lower);
-    const num = numSchema.validate(args.num);
-    const err = [users, accounts, transfers, upper, lower, num].find(
-        obj => obj.error
-    );
-    if (err) {
-        throw err.error;
+    const numSchema = _numSchema.min(1);
+    const userNumSchema = _numSchema.min(2);
+    const v = {
+        users: userNumSchema.validate(args.users),
+        accounts: numSchema.validate(args.accounts),
+        transfers: numSchema.validate(args.transfers),
+        upper: numSchema.validate(args.upper),
+        lower: numSchema.validate(args.lower),
+        num: numSchema.validate(args.num)
+    };
+    const invalidEntry = Object.entries(v).find(([k, v]) => v.error);
+
+    if (invalidEntry) {
+        console.error(
+            `invalid entry for [${invalidEntry[0]}] arg: ${invalidEntry[1].error}`
+        );
+        process.exit(1);
     }
+
     return Object.freeze({
-        users: users.value,
-        accountsPerUser: accounts.value,
-        transfersPerAccount: transfers.value,
+        users: v.users.value,
+        accountsPerUser: v.accounts.value,
+        transfersPerAccount: v.transfers.value,
         useRandom: !args.constant,
-        upper: upper.value,
-        lower: lower.value,
-        constAmount: num.value
+        upper: v.upper.value,
+        lower: v.lower.value,
+        constAmount: v.num.value
     });
 };
 
