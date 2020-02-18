@@ -1,3 +1,7 @@
+# Logging with trace IDs in Node.js: pino, express and cls-hooked
+
+
+
 Let's talk about logging with tracing in web application servers, particularly from the perspective of a http request that just came in. After the server receives it, its metadata is logged - the header, the origin, the http method etc. The request is then routed to the designated handler, which then parses the body, maybe firing off other functions and even queries and modifications to the database, all while processing it. If all goes well, the client recieves the desired response. Otherwise, an error occured along the way. All through, logging is (and should be) taking place. However, if there is no means of relating the logs to this particular request then monitoring features, tracking errors and debugging ends up being more involved than it needs to be. That is why appending a lightweight unique identifier/ trace ID/ transaction ID such as a UUID to each request-induced log is a [best-practice](https://github.com/goldbergyoni/nodebestpractices/blob/master/sections/production/assigntransactionid.md). 
 
 
@@ -18,10 +22,70 @@ Even though CLS is more popular, an arguably better alternative is [cls-hooked](
 
 * A Pragmatic Overview of Async Hooks API in Node.js: [link](https://itnext.io/a-pragmatic-overview-of-async-hooks-api-in-node-js-e514b31460e9)
 
-
-
 What I really want to take on is incorporating tracing when using a `pino`-based logger all while introducing as few modifications as possible. I opted to use `pino` over other logging libraries since it's lightweight, fast and has a relatively simpler API. However, most of the articles and documentation I found on tracing in node.js focused on `winston`- after all, it's the most popular module. The only [one](https://itnext.io/nodejs-logging-made-right-117a19e8b4ce) I found on `pino` was quite complicated, at least for me. I did learn a lot from it though, such as what the `Proxy` object is in javascript and how it can be used. But ultimately, I was unable to get it working for my use-case, probably due to my own error somewhere. Therefore, the following is a brief write-up of my approach - hopefully, it can help someone out there:
 
 
 
-Other than `pino` and `cls-hooked`, I'll also be using [cuid](https://www.npmjs.com/package/cuid) to generate unique Ids.
+Other than `pino` and `cls-hooked`, I'll also be using [cuid](https://www.npmjs.com/package/cuid) to generate unique Ids. 
+
+
+
+The first step is to create the middleware for `cls-hooked`. 
+
+```javascript
+const ns = cls.createNamespace("app");
+
+const traceMiddleware = (req, res, next) => {
+        ns.bindEmitter(req);
+        ns.bindEmitter(res);
+
+        ns.run(() => {
+            const traceID = cuid();
+            ns.set("traceID", traceID);
+            next();
+        });
+    };
+};
+```
+
+Do mind the hand-wavy explanation that's about to come: by wrapping the invocation of `next` within `ns.run`, all other subsequent function calls after this middleware have access to the specific value set in the continuation-local-storage. In this case, the value is `traceID` which is created for each request that comes in. Additionally, since both the `req` and `res` object are event-emitters, `ns.bindEmitter` is also used so that the related listener functions called can also access the traceID if needed.
+
+
+
+This middleware is then used as follows, preferably as early as possible in the middleware chain:
+
+```javascript
+//necessary imports
+const app = express();
+
+app.disable("x-powered-by");
+app.use(rateLimitingMiddlware);
+app.use(traceMiddleware)
+```
+
+
+
+Finally, the last piece of the puzzle - `pino`. In order to access the traceID within the logger, we set the `mixin` method when instantiating the logger. From `pino`'s documentation:
+
+> If provided, the `mixin` function is called each time one of the active logging methods is called. The function must synchronously return an object. The properties of the returned object will be added to the logged JSON.
+
+In this case, the traceID is retrieved and returned as an object from `mixin` which is the merged with the rest of the contents meant to be logged. Since `pino` JSON.stringifies log objects, if the logger is invoked outside of a request-response, the value returned will be `undefined` and the field will be ignored in the final output. Within request-response cycles though, it's retrieved successfully and included - which is what we want.
+
+```javascript
+let logger = pino({
+    prettyPrint: isNotProductionEnv === true,
+    mixin() {
+        const ns = cls.getNamespace("app");
+        return { traceID: ns.get("traceID") };
+    }
+});
+
+module.exports = {
+    logger,
+    traceMiddleware
+}
+```
+
+
+
+And that's it.
