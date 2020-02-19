@@ -1,4 +1,3 @@
-require("dotenv").config();
 const { Pool, types } = require("pg");
 const { logger } = require("../logger");
 

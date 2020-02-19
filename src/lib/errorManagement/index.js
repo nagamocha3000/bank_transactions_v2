@@ -20,7 +20,7 @@ const genClientErrors = (() => {
         Error.call(this);
         this.isClientErr = true;
         this.isOperationalError = true;
-        this.errCode = errCode;
+        this.code = errCode;
     }
     ClientError.prototype = Object.create(Error.prototype);
     ClientError.prototype.constructor = ClientError;
