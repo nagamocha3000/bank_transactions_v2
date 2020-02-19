@@ -10,6 +10,6 @@ function validationError(message) {
 }
 
 module.exports = {
-    userErrors: genClientErrors(userErrCodes),
+    userErrors,
     validationError
 };
