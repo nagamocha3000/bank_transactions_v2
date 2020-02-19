@@ -1,5 +1,5 @@
 const Joi = require("@hapi/joi");
-const { userErrors } = require("./errors");
+const { validationError } = require("./errors");
 
 const nameSchema = Joi.string()
     .alphanum()
@@ -22,7 +22,7 @@ const validateNewUser = (newUser = {}) =>
     new Promise((resolve, reject) => {
         const { error, value } = userSchema.validate(newUser);
         if (error) {
-            reject(userErrors.invalidNewUserDetails);
+            reject(validationError(error.details[0].message));
         } else resolve(value);
     });
 

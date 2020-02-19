@@ -1,7 +1,14 @@
 const { genClientErrors } = require("../../lib/errorManagement");
 
-const userErrCodes = ["invalidNewUserDetails"];
+const userErrCodes = ["invalidUserDetails"];
+const userErrors = genClientErrors(userErrCodes);
+function validationError(message) {
+    const err = Object.create(userErrors.invalidUserDetails);
+    err.message = message;
+    return err;
+}
 
 module.exports = {
-    userErrors: genClientErrors(userErrCodes)
+    userErrors: genClientErrors(userErrCodes),
+    validationError
 };
