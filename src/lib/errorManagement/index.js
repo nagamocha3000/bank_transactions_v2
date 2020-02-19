@@ -1,6 +1,8 @@
 const { logger } = require("../logger");
 
-const handleError = err => logger.error(err);
+const handleError = err => {
+    logger.error(err);
+};
 
 /*
 operational errors, marked as so, are 'trusted errors'
