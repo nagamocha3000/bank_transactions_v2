@@ -15,6 +15,33 @@ const markAsOperationalError = err => {
     return err;
 };
 
+const genClientErrors = (() => {
+    function ClientError(errCode) {
+        Error.call(this);
+        this.isClientErr = true;
+        this.isOperationalError = true;
+        this.errCode = errCode;
+    }
+    ClientError.prototype = Object.create(Error.prototype);
+    ClientError.prototype.constructor = ClientError;
+
+    return (errCodes = []) => {
+        const generatedErrs = errCodes.reduce(
+            (acc, errCode) => ({
+                ...acc,
+                [errCode]: new ClientError(errCode)
+            }),
+            Object.create(null)
+        );
+        return generatedErrs;
+    };
+})();
+
 const isUntrustedError = err => !err.isOperationalError;
 
-module.exports = { handleError, markAsOperationalError, isUntrustedError };
+module.exports = {
+    handleError,
+    markAsOperationalError,
+    isUntrustedError,
+    genClientErrors
+};
