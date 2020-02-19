@@ -9,7 +9,7 @@ create table users(
     email contact_entry_t unique,
     firstname contact_entry_t,
     lastname contact_entry_t,
-    password varchar(50) not null,
+    password varchar(100) not null,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     last_login timestamptz not null default now()
