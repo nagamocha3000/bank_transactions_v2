@@ -11,11 +11,11 @@ const nameSchema = Joi.string()
 const userSchema = Joi.object({
     firstname: nameSchema,
     lastname: nameSchema,
-    password: Joi.string(),
     email: Joi.string().email({
         minDomainSegments: 2,
         tlds: { allow: true }
-    })
+    }),
+    password: Joi.string()
 });
 
 const validateNewUser = (newUser = {}) =>
