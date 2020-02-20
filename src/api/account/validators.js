@@ -1,10 +1,10 @@
 const Joi = require("@hapi/joi");
 
 const accountSchema = Joi.object({
-    accountID: Joi.number().positive()
+    userID: Joi.number().positive()
 });
 
-const validateAccountDetails = (acc = {}) =>
+const validateNewAccountDetails = (acc = {}) =>
     new Promise((resolve, reject) => {
         const { error, value } = accountSchema.validate(acc);
         if (error) reject(validationError(error.details[0].message));
@@ -12,5 +12,5 @@ const validateAccountDetails = (acc = {}) =>
     });
 
 module.exports = {
-    validateAccountDetails
+    validateNewAccountDetails
 };

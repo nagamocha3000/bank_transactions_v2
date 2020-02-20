@@ -1,9 +1,9 @@
-const { validateAccountDetails } = require("./validators");
+const { validateNewAccountDetails } = require("./validators");
 const DAL = require("./DAL");
 
 //res has accountID set
 const createNewAccount = async accountDetails => {
-    const newAccount = await validateAccountDetails(accountDetails);
+    const newAccount = await validateNewAccountDetails(accountDetails);
     const res = await DAL.createNewAccount(newAccount);
     return res;
 };
