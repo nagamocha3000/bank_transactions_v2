@@ -1,8 +1,13 @@
+const { path: appRootPath } = require("app-root-path");
+const path = require("path");
+require("dotenv").config({ path: path.join(appRootPath, ".env") });
 const faker = require("faker");
 const program = require("commander");
 const Joi = require("@hapi/joi");
 const { Spinner } = require("cli-spinner");
 const _ = require("lodash");
+const { createNewUser } = require("../api/user").userControllers;
+const { createNewAccount } = require("../api/account").accountControllers;
 
 faker.seed(54321);
 
@@ -117,24 +122,17 @@ const amountFn = params => {
     }
 };
 
-//dummy fns, to be replaced by controllers
-const createUser = async opts => {
-    return faker.random.number();
-};
-
-const createAccount = async userID => {
-    return faker.random.number();
-};
-
 const makeSingleTransfer = (sender, receiver, amount) => {
     return faker.random.number();
 };
 
 //given the number of accounts to create a user plus userID
 //creates transfer accounts for user
-const createAccountsForUserFn = accountNums => async userID => {
+const createAccountsForUserFn = numAccountsPerUser => async userID => {
     const acctNums = await Promise.all(
-        Array.from({ length: accountNums }).map(() => createAccount(userID))
+        Array.from({ length: numAccountsPerUser }).map(() =>
+            createNewAccount({ userID })
+        )
     );
     return acctNums;
 };
@@ -142,8 +140,8 @@ const createAccountsForUserFn = accountNums => async userID => {
 //generate fake user data
 const genRandomUser = () => {
     const user = {
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
+        firstname: faker.name.firstName(),
+        lastname: faker.name.lastName(),
         email: faker.internet.email()
     };
     user.password = user.email.split("@")[0];
@@ -181,11 +179,12 @@ const seed = async params => {
     const userInsertions = [];
     for (let i = 0; i < params.users; i++) {
         const userDetails = genRandomUser();
-        userInsertions.push(createUser(userDetails));
+        userInsertions.push(createNewUser(userDetails));
     }
-    const userIDs = await Promise.all(userInsertions);
-    await timer(5000);
+    const userInsertionRes = await Promise.all(userInsertions);
+    const userIDs = userInsertionRes.map(res => res.userID).filter(id => id);
     spinner.stop(true);
+    console.log(`${userIDs.length}/${userInsertions.length} users inserted`);
 
     //create accounts
     spinner.setSpinnerTitle("adding transfer accounts for each user ...");
@@ -200,10 +199,14 @@ const seed = async params => {
         .flatten()
         .shuffle()
         .value();
-    await timer(5000);
     spinner.stop(true);
+    console.log(
+        `${acctNums.length}/${params.users *
+            params.accountsPerUser} accounts created`
+    );
 
     //adding transfers
+    /*
     spinner.setSpinnerTitle("generating transfers for each account ...");
     spinner.start();
     const transferInsertions = [];
@@ -218,8 +221,7 @@ const seed = async params => {
         transferInsertions.push(acctTransfers);
     });
     await Promise.all(transferInsertions);
-    await timer(5000);
-    spinner.stop(true);
+    spinner.stop(true);*/
     console.log("done");
 };
 

@@ -8,6 +8,7 @@
     "private": true,
     "dependencies": {
         "@hapi/joi": "^17.1.0",
+        "app-root-path": "^3.0.0",
         "bcrypt": "^3.0.8",
         "cli-spinner": "^0.2.10",
         "cls-hooked": "^4.2.2",
