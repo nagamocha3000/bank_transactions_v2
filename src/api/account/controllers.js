@@ -3,8 +3,8 @@ const DAL = require("./DAL");
 
 //res has accountID set
 const createNewAccount = async accountDetails => {
-    const newAccount = await DAL.validateAccountDetails(accountDetails);
-    const res = await createNewAccount(newAccount);
+    const newAccount = await validateAccountDetails(accountDetails);
+    const res = await DAL.createNewAccount(newAccount);
     return res;
 };
 
