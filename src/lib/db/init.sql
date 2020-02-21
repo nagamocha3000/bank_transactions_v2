@@ -90,6 +90,11 @@ begin
         and old.transfer_status = 'pending' 
         and old.from_account = new.from_account then
         return new; 
+    end if;
+    if tg_op = 'UPDATE' 
+        and old.transfer_status = 'pending' 
+        and old.from_account is null and new.from_account is null then
+        return new; 
     end if; 
     raise notice 'invalid operation on transfer_log entry';
     return null;
