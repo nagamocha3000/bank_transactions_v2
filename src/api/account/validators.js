@@ -1,7 +1,10 @@
 const Joi = require("@hapi/joi");
+const { validationError } = require("./errors");
 
 const accountSchema = Joi.object({
-    userID: Joi.number().positive()
+    userID: Joi.number()
+        .positive()
+        .required()
 });
 
 const validateNewAccountDetails = (acc = {}) =>
