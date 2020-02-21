@@ -11,7 +11,7 @@ let logger = pino({
     }
 });
 
-if (isNotProductionEnv) {
+if (process.env !== "production") {
     logger.level = "debug";
 }
 
