@@ -1,6 +1,5 @@
 const { path: appRootPath } = require("app-root-path");
-const path = require("path");
-require("dotenv").config({ path: path.join(appRootPath, ".env") });
+require("dotenv").config({ path: require("path").join(appRootPath, ".env") });
 const faker = require("faker");
 const program = require("commander");
 const Joi = require("@hapi/joi");
@@ -179,15 +178,21 @@ const seed = async params => {
     const userInsertions = [];
     for (let i = 0; i < params.users; i++) {
         const userDetails = genRandomUser();
-        userInsertions.push(createNewUser(userDetails));
+        userInsertions.push(
+            createNewUser(userDetails).catch(() => {
+                console.log(`unable to insert: `, userDetails);
+            })
+        );
     }
     const userInsertionRes = await Promise.all(userInsertions);
-    const userIDs = userInsertionRes.map(res => res.userID).filter(id => id);
+    const userIDs = userInsertionRes
+        .map(res => (res ? res.userID : -1))
+        .filter(n => n >= 0);
     spinner.stop(true);
     console.log(`${userIDs.length}/${userInsertions.length} users inserted`);
 
     //create accounts
-    spinner.setSpinnerTitle("adding transfer accounts for each user ...");
+    spinner.setSpinnerTitle("adding accounts for transfers for each user ...");
     spinner.start();
     const createAccounts = createAccountsForUserFn(params.accountsPerUser);
     const accountInsertions = [];
@@ -231,7 +236,6 @@ const main = async () => {
 
     const params = validateCmdArgs(program);
     logParams(params);
-
     try {
         await seed(params);
     } catch (err) {
