@@ -96,7 +96,7 @@ begin
         and old.from_account is null and new.from_account is null then
         return new; 
     end if; 
-    raise notice 'invalid operation on transfer_log entry';
+    raise exception 'invalid operation on transfer_log entry';
     return null;
 end;
 $$;
