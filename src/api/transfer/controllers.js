@@ -3,38 +3,13 @@ const {
     transferRequestSchema,
     transferDetailsSchema
 } = require("./inputSchemas");
-const { makeValidator, ClientError } = require("../utils");
-const { logger } = require("../../lib/logger");
+const { controller } = require("../utils");
 
-const handleTransfer = (schema, DALfn) => {
-    const validate = makeValidator(schema);
-    return async _transferDetails => {
-        try {
-            const transferDetails = await validate(_transferDetails);
-            const res = await DALfn(transferDetails);
-            return res;
-        } catch (err) {
-            if (err instanceof ClientError) return err.toRes();
-            logger.error(err);
-            return ClientError.res("Unable to process transfer");
-        }
-    };
-};
+const requestTransfer = controller(transferRequestSchema, DAL.requestTransfer);
 
-const requestTransfer = handleTransfer(
-    transferRequestSchema,
-    DAL.requestTransfer
-);
+const cancelTransfer = controller(transferDetailsSchema, DAL.cancelTransfer);
 
-const cancelTransfer = handleTransfer(
-    transferDetailsSchema,
-    DAL.cancelTransfer
-);
-
-const confirmTransfer = handleTransfer(
-    transferDetailsSchema,
-    DAL.confirmTransfer
-);
+const confirmTransfer = controller(transferDetailsSchema, DAL.confirmTransfer);
 
 module.exports = {
     requestTransfer,
