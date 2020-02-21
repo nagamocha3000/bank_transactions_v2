@@ -7,8 +7,12 @@ const { Spinner } = require("cli-spinner");
 const _ = require("lodash");
 const { createNewUser } = require("../api/user").userControllers;
 const { createNewAccount } = require("../api/account").accountControllers;
+const {
+    requestTransfer,
+    confirmTransfer
+} = require("../api/transfer").transferControllers;
 
-faker.seed(54321);
+//faker.seed(54321);
 
 //fns for parsing cmdline args
 const getInt = value => parseInt(value);
@@ -16,46 +20,49 @@ const getBool = value => value.toLowerCase().startsWith("t");
 const timer = (ms = 1000) => new Promise(resolve => setTimeout(resolve, ms));
 
 //setup cmdline args
-program
-    .description("db seed script, for one-time use")
-    .option("-u --users <users>", "number of users to insert", getInt, 10)
-    .option(
-        "-a --accounts <accounts>",
-        "number of accounts per user to insert",
-        getInt,
-        2
-    )
-    .option(
-        "-t --transfers <transfers>",
-        "number of transfers per account to insert",
-        getInt,
-        5
-    )
-    .option(
-        "-c --constant <constant>",
-        "whether to use a constant value for each transfer value otherwise random value between upper,lower used. Use -n/--num to set constant",
-        getBool,
-        false
-    )
-    .option(
-        "-x --upper <upper>",
-        "upper value for random, inclusive",
-        getInt,
-        20
-    )
-    .option(
-        "-y --lower <lower>",
-        "lower value for random, inclusive",
-        getInt,
-        5
-    )
-    .option(
-        "-n --num <num>",
-        "if non-random, value for each transfer",
-        getInt,
-        10
-    );
-
+const setupCMD = () => {
+    program
+        .description("db seed script, for one-time use")
+        .option("-u --users <users>", "number of users to insert", getInt, 10)
+        .option(
+            "-a --accounts <accounts>",
+            "number of accounts per user to insert",
+            getInt,
+            2
+        )
+        .option(
+            "-t --transfers <transfers>",
+            "number of transfers per account to insert",
+            getInt,
+            5
+        )
+        .option(
+            "-c --constant <constant>",
+            "whether to use a constant value for each transfer value otherwise random value between upper,lower used. Use -n/--num to set constant",
+            getBool,
+            false
+        )
+        .option(
+            "-x --upper <upper>",
+            "upper value for random, inclusive",
+            getInt,
+            20
+        )
+        .option(
+            "-y --lower <lower>",
+            "lower value for random, inclusive",
+            getInt,
+            5
+        )
+        .option(
+            "-n --num <num>",
+            "if non-random, value for each transfer",
+            getInt,
+            10
+        );
+    program.parse(process.argv);
+    return program;
+};
 //for validation of cmd line args
 const validateCmdArgs = args => {
     const _numSchema = Joi.number()
@@ -121,10 +128,6 @@ const amountFn = params => {
     }
 };
 
-const makeSingleTransfer = (sender, receiver, amount) => {
-    return faker.random.number();
-};
-
 //given the number of accounts to create a user plus userID
 //creates transfer accounts for user
 const createAccountsForUserFn = numAccountsPerUser => async userID => {
@@ -160,12 +163,32 @@ const cycle = (arr, startingPt) => {
 };
 
 //makesTransfers
-const makeTransfers = async (sender, receiverFn, amountFn, numTransfers) => {
-    const transfers = Array.from({ length: numTransfers }).map(() =>
-        makeSingleTransfer(sender, receiverFn(), amountFn())
-    );
-    await Promise.all(transfers);
+const makeSingleTransfer = async (from, to, amount) => {
+    const { transferID } = await requestTransfer({ from, to, amount });
+    const res = await confirmTransfer({ transferID });
+    return res;
 };
+
+const makeMultipleTransfers = async (
+    sender,
+    receiverFn,
+    amountFn,
+    numTransfers
+) => {
+    const transfers = [];
+    for (let i = 0; i < numTransfers; i++) {
+        const res = await makeSingleTransfer(sender, receiverFn(), amountFn());
+        transfers.push(res);
+    }
+    return transfers;
+};
+
+// const spinner = {
+//     start() {},
+//     setSpinnerTitle() {},
+//     setSpinnerString() {},
+//     stop() {}
+// };
 
 //brings in everything together
 const seed = async params => {
@@ -202,6 +225,7 @@ const seed = async params => {
     const acctNumsNested = await Promise.all(accountInsertions);
     const acctNums = _(acctNumsNested)
         .flatten()
+        .map(({ accountID }) => accountID)
         .shuffle()
         .value();
     spinner.stop(true);
@@ -211,30 +235,33 @@ const seed = async params => {
     );
 
     //adding transfers
-    /*
     spinner.setSpinnerTitle("generating transfers for each account ...");
     spinner.start();
     const transferInsertions = [];
-    const genAmount = amountFn(params);
     acctNums.forEach((acct, index) => {
-        const acctTransfers = makeTransfers(
+        const transfers = makeMultipleTransfers(
             acct,
             cycle(acctNums, index),
-            genAmount,
+            amountFn(params),
             params.transfersPerAccount
         );
-        transferInsertions.push(acctTransfers);
+        transferInsertions.push(transfers);
     });
-    await Promise.all(transferInsertions);
-    spinner.stop(true);*/
+    const transferRes = await Promise.all(transferInsertions);
+    spinner.stop(true);
+    console.log(
+        `${transferRes.filter(t => t && t.confirmed).length *
+            params.transfersPerAccount}/${params.users *
+            params.accountsPerUser *
+            params.transfersPerAccount} transfers made`
+    );
     console.log("done");
 };
 
 //startingPt
 const main = async () => {
-    program.parse(process.argv);
-
-    const params = validateCmdArgs(program);
+    const cmd = setupCMD();
+    const params = validateCmdArgs(cmd);
     logParams(params);
     try {
         await seed(params);
