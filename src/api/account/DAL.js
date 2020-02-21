@@ -1,8 +1,5 @@
-require("dotenv").config({
-    path:
-        "/Users/bnm/Desktop/PROJECTS/NODEJS_PROJECTS/15_BANK_TRANSACTIONS_V2/.env"
-});
 const db = require("../../lib/db");
+const { ClientError } = require("../utils");
 
 const createNewAccount = async ({ userID }) => {
     const res = await db.query(
@@ -19,7 +16,7 @@ const getAccountDetails = async ({ accountID }) => {
     );
     const acct = res.rows[0];
     if (!acct)
-        throw new Error(
+        throw new ClientError(
             `invalid account retrieval ${accountID} does not exist`
         );
     return {
