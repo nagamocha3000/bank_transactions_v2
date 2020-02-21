@@ -15,7 +15,7 @@ ClientError.res = function _res(message = "error") {
     return { error: { message } };
 };
 
-const validate = schema => (input = {}) =>
+const makeValidator = schema => (input = {}) =>
     new Promise((resolve, reject) => {
         const { error, value } = schema.validate(input);
         if (error) {
@@ -23,4 +23,12 @@ const validate = schema => (input = {}) =>
         } else resolve(value);
     });
 
-module.exports = { ClientError, validate };
+//The maximum is exclusive and the minimum is inclusive
+const randInt = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+};
+const timer = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+module.exports = { ClientError, makeValidator, randInt, timer };
