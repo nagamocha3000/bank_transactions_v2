@@ -200,7 +200,7 @@ begin
     end if;
     with sender as(
         update account 
-            set balance = balance - tf_row.amount 
+            set balance = balance - tf_row.amount, updated_at = now() 
             where account_id = tf_row.from_account 
                 and is_active = 't' 
                 and balance >= tf_row.amount 
@@ -215,7 +215,7 @@ begin
     end if;
     --update receiever account
     update account 
-        set balance = balance + tf_row.amount
+        set balance = balance + tf_row.amount, updated_at = now() 
         where account_id = tf_row.to_account;
     --update transfer_status in transfer_log
     update transfer_log 
