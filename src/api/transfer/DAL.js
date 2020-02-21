@@ -21,7 +21,10 @@ const makeSerializableTx = async doSQL => {
         } catch (err) {
             await client.query("rollback");
             serializationErrOccured = err.code === "40001";
-            if (serializationErrOccured === false) throw err;
+            if (serializationErrOccured === false) {
+                console.log(err);
+                throw err;
+            }
             //else console.log("serialization error occured")
         } finally {
             client.release();
