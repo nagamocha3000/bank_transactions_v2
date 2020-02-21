@@ -4,10 +4,7 @@ const cls = require("cls-hooked");
 const cuid = require("cuid");
 const { getReqResDetails } = require("./utils");
 
-const isNotProductionEnv = process.env.NODE_ENV !== "production";
-
 let logger = pino({
-    prettyPrint: isNotProductionEnv === true,
     mixin() {
         const ns = cls.getNamespace("app");
         return { traceID: ns.get("traceID") };
