@@ -229,13 +229,4 @@ begin
 end;
 $$;
 
---SEED SOME VALUES
-insert into users(email, firstname, lastname, password)
-values
-    ('alice@gmail.com', 'alice', 'alison', '123456'),
-    ('bob@gmail.com', 'bob', 'bobson', '123456');
-    
-insert into account(user_id)
-values (1),(2);
-
 commit;
