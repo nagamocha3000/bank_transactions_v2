@@ -2,7 +2,6 @@ const Joi = require("@hapi/joi");
 const { validationError } = require("./errors");
 
 const nameSchema = Joi.string()
-    .alphanum()
     .min(1)
     .max(50)
     .pattern(/\S/)
