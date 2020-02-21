@@ -1,3 +1,5 @@
+const { path: appRootPath } = require("app-root-path");
+require("dotenv").config({ path: require("path").join(appRootPath, ".env") });
 const { Pool, types } = require("pg");
 const { logger } = require("../logger");
 
@@ -12,10 +14,6 @@ const pool = new Pool({
     connectionString: isProduction ? process.env.DATABASE_URL : pgConnString,
     ssl: isProduction,
     idleTimeoutMillis: 1000
-});
-
-pool.on("error", (err, client) => {
-    logger.error(err);
 });
 
 const query = (text, params) => pool.query(text, params);
