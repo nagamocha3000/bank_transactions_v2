@@ -89,6 +89,7 @@ begin
     if tg_op = 'UPDATE' 
         and old.transfer_status = 'pending' 
         and old.from_account = new.from_account then
+        new.updated_at = now();
         return new; 
     end if;
     if tg_op = 'UPDATE' 
@@ -163,19 +164,17 @@ create function cancel_transfer(transfer_id uuid)
     language 'plpgsql'
 as $$
 declare 
-    is_success boolean := 'f';
     tf_row record;
 begin
-    with tf_details as (
-        update transfer_log 
-            set transfer_status = 'cancelled'
-            where transfer_log_id = transfer_id and transfer_status = 'pending'
-            returning 't' as cancelled
-    ) select cancelled into is_success from tf_details;
-    if not found then 
-        is_success := 'f';
+    update transfer_log 
+        set transfer_status = 'cancelled'
+        where transfer_log_id = transfer_id and transfer_status = 'pending';
+    select * into tf_row from transfer_log where transfer_log_id = transfer_id;
+    if tf_row.transfer_status = 'cancelled' then 
+        return 't';
+    else
+        return 'f';
     end if;
-    return is_success;
 end;
 $$;
 
@@ -193,6 +192,12 @@ declare
 begin
     --update sender account, deduct balance
     select * into tf_row from transfer_log where transfer_log_id = transfer_id;
+    if tf_row.transfer_status = 'confirmed' then 
+        return 't';
+    end if;
+    if tf_row.transfer_status <> 'pending' then 
+        return 'f';
+    end if;
     with sender as(
         update account 
             set balance = balance - tf_row.amount 
@@ -201,10 +206,11 @@ begin
                 and balance >= tf_row.amount 
             returning account_id
     )select account_id into sender_acct_id from sender;
-    if not found then
+    --if from_acc has insufficient balance or acct deactivated then error
+    if not found then 
         update transfer_log 
             set transfer_status = 'error'
-            where transfer_log_id = transfer_id;
+            where transfer_log_id = transfer_id and transfer_status = 'pending';
         return 'f';
     end if;
     --update receiever account
@@ -223,6 +229,13 @@ begin
 end;
 $$;
 
-
+--SEED SOME VALUES
+insert into users(email, firstname, lastname, password)
+values
+    ('alice@gmail.com', 'alice', 'alison', '123456'),
+    ('bob@gmail.com', 'bob', 'bobson', '123456');
+    
+insert into account(user_id)
+values (1),(2);
 
 commit;
