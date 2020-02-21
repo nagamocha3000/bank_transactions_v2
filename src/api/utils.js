@@ -1,3 +1,5 @@
+const Joi = require("@hapi/joi");
+
 function ClientError(message) {
     Error.call(this);
     Error.captureStackTrace(this);
@@ -23,6 +25,22 @@ const makeValidator = schema => (input = {}) =>
         } else resolve(value);
     });
 
+const controller = (validate, DALfn) => {
+    return async _transferDetails => {
+        try {
+            const transferDetails = await validate(_transferDetails);
+            const res = await DALfn(transferDetails);
+            return res;
+        } catch (err) {
+            if (err instanceof ClientError) return err.toRes();
+            logger.error(err);
+            return ClientError.res("Unable to process operation");
+        }
+    };
+};
+
+const noSchema = Joi.any();
+
 //The maximum is exclusive and the minimum is inclusive
 const randInt = (min, max) => {
     min = Math.ceil(min);
@@ -31,4 +49,11 @@ const randInt = (min, max) => {
 };
 const timer = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports = { ClientError, makeValidator, randInt, timer };
+module.exports = {
+    ClientError,
+    makeValidator,
+    noSchema,
+    controller,
+    randInt,
+    timer
+};
