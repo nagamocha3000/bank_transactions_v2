@@ -1,4 +1,5 @@
 const Joi = require("@hapi/joi");
+const { logger } = require("../lib/logger");
 
 function ClientError(message) {
     Error.call(this);
