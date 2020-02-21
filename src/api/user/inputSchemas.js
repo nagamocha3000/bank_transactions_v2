@@ -1,5 +1,4 @@
 const Joi = require("@hapi/joi");
-const { validationError } = require("./errors");
 
 const nameSchema = Joi.string()
     .min(1)
@@ -17,14 +16,6 @@ const userSchema = Joi.object({
     password: Joi.string()
 });
 
-const validateNewUser = (newUser = {}) =>
-    new Promise((resolve, reject) => {
-        const { error, value } = userSchema.validate(newUser);
-        if (error) {
-            reject(validationError(error.details[0].message));
-        } else resolve(value);
-    });
-
 module.exports = {
-    validateNewUser
+    userSchema
 };

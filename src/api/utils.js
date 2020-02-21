@@ -20,16 +20,15 @@ ClientError.res = function _res(message = "error") {
 const makeValidator = schema => (input = {}) =>
     new Promise((resolve, reject) => {
         const { error, value } = schema.validate(input);
-        if (error) {
-            reject(new ClientError(error.details[0].message));
-        } else resolve(value);
+        if (error) reject(new ClientError(error.details[0].message));
+        else resolve(value);
     });
 
 const controller = (validate, DALfn) => {
-    return async _transferDetails => {
+    return async _input => {
         try {
-            const transferDetails = await validate(_transferDetails);
-            const res = await DALfn(transferDetails);
+            const input = await validate(_input);
+            const res = await DALfn(input);
             return res;
         } catch (err) {
             if (err instanceof ClientError) return err.toRes();

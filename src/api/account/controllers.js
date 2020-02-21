@@ -1,23 +1,24 @@
 const DAL = require("./DAL");
-const { controller } = require("../utils");
+const { controller, makeValidator: v } = require("../utils");
 const {
     accountCreationSchema,
     accountUpdateSchema
 } = require("./inputSchemas");
 
 const createNewAccount = controller(
-    accountCreationSchema,
+    v(accountCreationSchema),
     DAL.createNewAccount
 );
 
-const activateAccount = controller(accountUpdateSchema, DAL.activateAccount);
+const activateAccount = controller(v(accountUpdateSchema), DAL.activateAccount);
+
 const deactivateAccount = controller(
-    accountUpdateSchema,
+    v(accountUpdateSchema),
     DAL.deactivateAccount
 );
 
 const getAccountDetails = controller(
-    accountUpdateSchema,
+    v(accountUpdateSchema),
     DAL.getAccountDetails
 );
 

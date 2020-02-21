@@ -3,13 +3,19 @@ const {
     transferRequestSchema,
     transferDetailsSchema
 } = require("./inputSchemas");
-const { controller } = require("../utils");
+const { controller, makeValidator: v } = require("../utils");
 
-const requestTransfer = controller(transferRequestSchema, DAL.requestTransfer);
+const requestTransfer = controller(
+    v(transferRequestSchema),
+    DAL.requestTransfer
+);
 
-const cancelTransfer = controller(transferDetailsSchema, DAL.cancelTransfer);
+const cancelTransfer = controller(v(transferDetailsSchema), DAL.cancelTransfer);
 
-const confirmTransfer = controller(transferDetailsSchema, DAL.confirmTransfer);
+const confirmTransfer = controller(
+    v(transferDetailsSchema),
+    DAL.confirmTransfer
+);
 
 module.exports = {
     requestTransfer,

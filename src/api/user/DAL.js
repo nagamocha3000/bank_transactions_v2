@@ -1,5 +1,5 @@
 const db = require("../../lib/db");
-const { userErrors } = require("./errors");
+const { ClientError } = require("../utils");
 
 const createNewUser = async ({ firstname, lastname, password, email }) => {
     try {
@@ -10,8 +10,7 @@ const createNewUser = async ({ firstname, lastname, password, email }) => {
         );
         return { userID: res.rows[0].user_id };
     } catch (err) {
-        if (err.code === "23505")
-            return { error: userErrors.emailAlreadyExists };
+        if (err.code === "23505") throw ClientError("emailAlreadyExists");
         else throw err;
     }
 };

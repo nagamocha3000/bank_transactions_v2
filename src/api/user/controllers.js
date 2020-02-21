@@ -1,13 +1,14 @@
-const { validateNewUser } = require("./validators");
-const { hashPassword } = require("./utils");
 const DAL = require("./DAL");
+const { userSchema } = require("./inputSchemas");
+const { controller, makeValidator } = require("../utils");
+const { hashPassword } = require("./utils");
 
-//returns res obj with either userID or error property
-const createNewUser = async userDetails => {
-    const newUser = await validateNewUser(userDetails);
-    newUser.password = await hashPassword(newUser.password);
-    const res = await DAL.createNewUser(newUser);
-    return res;
-};
+const createNewUser = controller(
+    makeValidator(userSchema).then(user => {
+        user.password = hashPassword(user.password);
+        return user;
+    }),
+    DAL.createNewUser
+);
 
 module.exports = { createNewUser };
