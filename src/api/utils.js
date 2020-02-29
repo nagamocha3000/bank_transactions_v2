@@ -1,4 +1,5 @@
 const Joi = require("@hapi/joi");
+const express = require("express");
 const { logger } = require("../lib/logger");
 
 function ClientError(message) {
@@ -49,11 +50,21 @@ const randInt = (min, max) => {
 };
 const timer = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+const parseJSONMiddleware = (() => {
+    const parseJSON = express.json({
+        strict: true,
+        limit: "200b"
+    });
+    return (req, res, next) =>
+        parseJSON(req, res, err => (err ? res.sendStatus(400) : next()));
+})();
+
 module.exports = {
     ClientError,
     makeValidator,
     noSchema,
     controller,
     randInt,
-    timer
+    timer,
+    parseJSONMiddleware
 };
