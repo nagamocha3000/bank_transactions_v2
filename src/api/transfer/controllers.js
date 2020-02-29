@@ -1,7 +1,8 @@
 const DAL = require("./DAL");
 const {
     transferRequestSchema,
-    transferDetailsSchema
+    transferFinalizeSchema,
+    accountDetailsSchema
 } = require("./inputSchemas");
 const { controller, makeValidator: v } = require("../utils");
 
@@ -10,15 +11,18 @@ const requestTransfer = controller(
     DAL.requestTransfer
 );
 
-const cancelTransfer = controller(v(transferDetailsSchema), DAL.cancelTransfer);
+const finalizeTransfer = controller(
+    v(transferFinalizeSchema),
+    DAL.finalizeTransfer
+);
 
-const confirmTransfer = controller(
-    v(transferDetailsSchema),
-    DAL.confirmTransfer
+const getPendingTransfers = controller(
+    v(accountDetailsSchema),
+    DAL.getPendingTransfers
 );
 
 module.exports = {
     requestTransfer,
-    cancelTransfer,
-    confirmTransfer
+    finalizeTransfer,
+    getPendingTransfers
 };

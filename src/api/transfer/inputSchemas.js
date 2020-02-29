@@ -10,10 +10,19 @@ const transferRequestSchema = Joi.object({
     amount: numSchema
 });
 
-const transferDetailsSchema = Joi.object({
+const transferFinalizeSchema = Joi.object({
     transferID: Joi.string()
         .guid()
-        .required()
+        .required(),
+    action: Joi.string().valid("cancel", "confirm")
 });
 
-module.exports = { transferRequestSchema, transferDetailsSchema };
+const accountDetailsSchema = Joi.object({
+    accountID: Joi.number().integer()
+});
+
+module.exports = {
+    transferRequestSchema,
+    transferFinalizeSchema,
+    accountDetailsSchema
+};
