@@ -10,7 +10,8 @@ const createNewUser = async ({ firstname, lastname, password, email }) => {
         );
         return { userID: res.rows[0].user_id };
     } catch (err) {
-        if (err.code === "23505") throw ClientError("emailAlreadyExists");
+        if (err.code === "23505")
+            throw new ClientError(`emailAlreadyExists: ${email}`);
         else throw err;
     }
 };
