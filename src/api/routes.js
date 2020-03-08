@@ -1,6 +1,7 @@
 const express = require("express");
 const { parseJSONMiddleware } = require("./utils");
 const { transferControllers } = require("./transfer");
+const { accountControllers } = require("./account");
 const api = express.Router();
 
 const asyncRouteWrapper = routerFn => (req, res, next) =>
@@ -34,6 +35,17 @@ api.get(
             accountID
         });
         res.json(pendingTransfers);
+    })
+);
+
+api.get(
+    "/accounts/:accountID/bank_statement",
+    asyncRouteWrapper(async (req, res) => {
+        const accountID = parseInt(req.params.accountID, 10);
+        const bankStatement = await accountControllers.getBankStatement({
+            accountID
+        });
+        res.json(bankStatement);
     })
 );
 

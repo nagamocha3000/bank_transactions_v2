@@ -28,6 +28,13 @@ const getAccountDetails = async ({ accountID }) => {
     };
 };
 
+const getBankStatement = async ({ accountID }) => {
+    const {
+        rows: bankStatement
+    } = await db.query("select * from gen_bank_statement($1)", [accountID]);
+    return bankStatement;
+};
+
 const setActivation = bool => async ({ accountID }) => {
     const res = await db.query(
         "update account set is_active = $1 where is_active = $2 and account_id = $3 returning 't'::boolean",
@@ -42,5 +49,6 @@ module.exports = {
     activateAccount,
     deactivateAccount,
     createNewAccount,
-    getAccountDetails
+    getAccountDetails,
+    getBankStatement
 };

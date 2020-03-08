@@ -22,9 +22,15 @@ const getAccountDetails = controller(
     DAL.getAccountDetails
 );
 
+const getBankStatement = controller(
+    v(accountUpdateSchema),
+    DAL.getBankStatement
+);
+
 module.exports = {
     createNewAccount,
     activateAccount,
     deactivateAccount,
-    getAccountDetails
+    getAccountDetails,
+    getBankStatement
 };
