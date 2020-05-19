@@ -9,7 +9,7 @@ const requestTransfer = async ({ from, to, amount }) => {
     return { transferID };
 };
 
-const makeSerializableTx = async doSQL => {
+const makeSerializableTx = async (doSQL) => {
     let serializationErrOccured = false;
     do {
         const client = await db.getClient();
@@ -22,8 +22,8 @@ const makeSerializableTx = async doSQL => {
             await client.query("rollback");
             serializationErrOccured = err.code === "40001";
             if (serializationErrOccured === false) {
-                console.log(err);
-                throw err;
+                //console.log(err);
+                //throw err;
             }
             //else console.log("serialization error occured")
         } finally {
@@ -33,20 +33,27 @@ const makeSerializableTx = async doSQL => {
 };
 
 const finalizeTransfer = (() => {
-    const cancelTransfer = transferID =>
-        makeSerializableTx(async tx => {
+    const cancelTransfer = (transferID) =>
+        makeSerializableTx(async (tx) => {
             const res = await tx.query("select cancel_transfer($1)", [
-                transferID
+                transferID,
             ]);
             return { cancelled: res.rows[0].cancel_transfer };
         });
 
-    const confirmTransfer = transferID =>
-        makeSerializableTx(async tx => {
-            const res = await tx.query("select confirm_transfer($1)", [
-                transferID
-            ]);
-            return { confirmed: res.rows[0].confirm_transfer };
+    const confirmTransfer = (transferID) =>
+        makeSerializableTx(async (tx) => {
+            try {
+                const res = await tx.query("select confirm_transfer($1)", [
+                    transferID,
+                ]);
+                return { confirmed: res.rows[0].confirm_transfer };
+            } catch (err) {
+                if (err.code === "40P01") {
+                    console.error({ transferID, error: "deadlock" });
+                }
+                throw err;
+            }
         });
 
     return ({ transferID, action }) => {
@@ -75,5 +82,5 @@ const getPendingTransfers = async ({ accountID }) => {
 module.exports = {
     requestTransfer,
     finalizeTransfer,
-    getPendingTransfers
+    getPendingTransfers,
 };

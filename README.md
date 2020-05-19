@@ -1,1 +1,7 @@
-# Transactions at the Bank API, V2
+## Quick Overview
+
+A bare-bones API + data layer for a bank's services and operations.  Uses Node.js and Postgres to Implements user and account creation, and money deposits, withdraws and tranfers between accounts. Each transfer starts of from a 'pending' state and can either be 'confirmed' or 'cancelled'. An account can only have one pending transfer at a time and each previously pending transfer is timed-out. In a way, this helps prevent users from accidentally carrying out the same transfer more than once. Users can also retrieve mini-statements and full bank statements for their accounts.
+
+It's mainly for learning purposes. Specifically, I wanted to work on a project where I try to apply as many of the Node.js best practices as detailed in the following [compilation](https://github.com/goldbergyoni/nodebestpractices) to see how such practices simplify and improve development. For example, [one](https://github.com/goldbergyoni/nodebestpractices/blob/master/sections/projectstructre/breakintcomponents.md) of the best practice entails structuring the solution by components rather than the traditional splitting up functionality into controllers, models, routes which I've been using in previous projects. And as you can see in the src/api directory, the api is structured into the following components: user, account and transfer, each encapsulating the functionalities related to those entities.
+
+I also wanted to practice writing PL/pgSQL procedures and trigger functions hence their heavy use in the data layer (lib/db/init.sql), even in cases where it's more prudent for some of the procedures to be carried out in the application rather than database to accomodate changes in business rules.
