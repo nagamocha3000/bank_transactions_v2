@@ -9,7 +9,7 @@
     "dependencies": {
         "@hapi/joi": "^17.1.1",
         "app-root-path": "^3.0.0",
-        "bcrypt": "^4.0.1",
+        "bcrypt": "^5.0.0",
         "cli-spinner": "^0.2.10",
         "cls-hooked": "^4.2.2",
         "commander": "^5.1.0",
